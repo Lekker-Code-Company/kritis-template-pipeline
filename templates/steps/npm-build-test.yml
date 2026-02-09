@@ -1,0 +1,18 @@
+parameters:
+  path: 'frontend'
+  nodeVersion: '20.x'
+
+steps:
+  - task: NodeTool@0
+    displayName: 'Use Node.js'
+    inputs:
+      versionSpec: ${{ parameters.nodeVersion }}
+
+  - bash: |
+      set -euo pipefail
+      cd "${{ parameters.path }}"
+      npm ci
+      npm test -- --watch=false
+      npm run build
+    displayName: 'Build + test (Node/Angular)'
+

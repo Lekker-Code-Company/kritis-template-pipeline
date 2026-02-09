@@ -1,0 +1,23 @@
+apiVersion: v2
+name: kritis-example-dotnet-angular
+description: Example chart demonstrating mccs-helm-common usage patterns (labels, security contexts, traceability).
+type: application
+version: 0.1.0
+appVersion: "0.0.0"
+
+dependencies:
+  # For local development of the chart within this mono-workspace.
+  # In real product repos, use your platform's OCI chart registry.
+  - name: mccs-dot-net
+    version: "*"
+    repository: "file://../../../../mccs-helm-common/charts/mccs-dot-net"
+    import-values:
+      - child: global
+        parent: global
+  - name: mccs-frontend
+    version: "*"
+    repository: "file://../../../../mccs-helm-common/charts/mccs-frontend"
+    import-values:
+      - child: global
+        parent: global
+

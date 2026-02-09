@@ -1,0 +1,14 @@
+parameters:
+  chartPath: 'deployment/chart'
+
+steps:
+  - bash: |
+      set -euo pipefail
+      if ! command -v helm >/dev/null 2>&1; then
+        echo "helm not available on agent" >&2
+        exit 2
+      fi
+      helm lint "${{ parameters.chartPath }}"
+      helm template "${{ parameters.chartPath }}" >/dev/null
+    displayName: 'Helm lint + template'
+

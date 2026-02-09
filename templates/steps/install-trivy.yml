@@ -1,0 +1,12 @@
+parameters:
+  version: '0.56.2'
+
+steps:
+  - bash: |
+      set -euo pipefail
+      TRIVY_VERSION="${{ parameters.version }}"
+      echo "Installing Trivy ${TRIVY_VERSION}..."
+      curl -sfL "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh" | sh -s -- -b /usr/local/bin "v${TRIVY_VERSION}"
+      trivy --version
+    displayName: 'Install Trivy'
+

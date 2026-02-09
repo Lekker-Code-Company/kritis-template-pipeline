@@ -1,0 +1,38 @@
+parameters:
+  path: '.'
+  severity: 'HIGH,CRITICAL'
+  failOnFindings: true
+  ignoreFile: '.trivyignore'
+  skipDirs: 'node_modules,.git,bin,obj'
+  outputJson: 'trivy-fs.json'
+
+steps:
+  - bash: |
+      set -euo pipefail
+      SCAN_PATH="${{ parameters.path }}"
+      OUT="${{ parameters.outputJson }}"
+
+      echo "Scanning filesystem: ${SCAN_PATH}"
+
+      # Trivy docs: `fs` can scan vuln+misconfig+secret simultaneously.
+      # We produce JSON output for later processing/artifact publishing.
+      EXIT_CODE=0
+      if [ "${{ parameters.failOnFindings }}" = "true" ]; then
+        EXIT_CODE=1
+      fi
+
+      trivy fs "${SCAN_PATH}" \
+        --scanners vuln,secret,misconfig,license \
+        --severity "${{ parameters.severity }}" \
+        --ignore-file "${{ parameters.ignoreFile }}" \
+        --skip-dirs "${{ parameters.skipDirs }}" \
+        --format json \
+        --output "${OUT}" \
+        --exit-code "${EXIT_CODE}"
+    displayName: 'Trivy filesystem scan'
+
+  - publish: ${{ parameters.outputJson }}
+    artifact: trivy-fs
+    displayName: 'Publish Trivy filesystem report'
+    condition: succeededOrFailed()
+

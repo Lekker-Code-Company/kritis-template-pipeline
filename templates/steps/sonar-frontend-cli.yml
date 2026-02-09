@@ -1,0 +1,29 @@
+parameters:
+  enabled: false
+  workingDirectory: 'frontend'
+  sonarProjectProperties: 'sonar-project.properties'
+  sonarHostUrlVar: 'SONAR_HOST_URL'
+  sonarTokenVar: 'SONAR_TOKEN'
+
+steps:
+  - ${{ if eq(parameters.enabled, true) }}:
+      - bash: |
+          set -euo pipefail
+          HOST_URL="$(printenv ${{ parameters.sonarHostUrlVar }} || true)"
+          TOKEN="$(printenv ${{ parameters.sonarTokenVar }} || true)"
+          if [ -z "${HOST_URL}" ] || [ -z "${TOKEN}" ]; then
+            echo "Missing Sonar variables: ${{ parameters.sonarHostUrlVar }} and/or ${{ parameters.sonarTokenVar }}" >&2
+            exit 2
+          fi
+
+          cd "${{ parameters.workingDirectory }}"
+          npm ci
+
+          # Official sonar-scanner is a Java-based CLI; use npx wrapper for convenience.
+          # The actual connection details come from env vars.
+          npx --yes sonar-scanner \
+            -Dproject.settings="${{ parameters.sonarProjectProperties }}" \
+            -Dsonar.host.url="${HOST_URL}" \
+            -Dsonar.token="${TOKEN}"
+        displayName: 'Sonar scan (frontend)'
+

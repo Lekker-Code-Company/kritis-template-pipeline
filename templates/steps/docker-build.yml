@@ -1,0 +1,25 @@
+parameters:
+  dockerfile: 'Dockerfile'
+  context: '.'
+  image: ''          # e.g. myacr.azurecr.io/app
+  tag: ''            # e.g. $(Build.BuildId)
+
+steps:
+  - bash: |
+      set -euo pipefail
+      if [ -z "${{ parameters.image }}" ] || [ -z "${{ parameters.tag }}" ]; then
+        echo "image and tag parameters are required" >&2
+        exit 2
+      fi
+
+      docker build \
+        -f "${{ parameters.dockerfile }}" \
+        -t "${{ parameters.image }}:${{ parameters.tag }}" \
+        --label "org.opencontainers.image.revision=$(GIT_SHA)" \
+        --label "org.opencontainers.image.created=$(Build.QueuedDate)" \
+        --build-arg "GIT_SHA=$(GIT_SHA)" \
+        --build-arg "BUILD_ID=$(BUILD_ID)" \
+        --build-arg "REQUIREMENT_ID=$(REQUIREMENT_ID)" \
+        "${{ parameters.context }}"
+    displayName: 'Docker build (traceability labels)'
+

@@ -1,0 +1,22 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+stages:
+  - template: ../../templates/stages/dotnet-angular-ci.yml
+    parameters:
+      backendPath: examples/dotnet-angular/backend
+      frontendPath: examples/dotnet-angular/frontend
+      enableTrivy: true
+      enableSbom: true
+      trivyFailOnFindings: true
+      trivySeverity: 'HIGH,CRITICAL'
+      requirementId: '' # set by consumer based on your process (branch naming / PR title / work items)
+      helmChartPath: examples/dotnet-angular/deployment/chart
+

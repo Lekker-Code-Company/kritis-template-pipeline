@@ -1,0 +1,20 @@
+<main class="page">
+  <header class="header">
+    <h1>KRITIS Example Frontend</h1>
+    <p>
+      Shows <code>/ops/info</code> to demonstrate requirement/build/commit/pod traceability.
+    </p>
+  </header>
+
+  <section class="card">
+    <h2>Backend Ops Info</h2>
+    @if (info$ | async; as info) {
+      <pre class="json">{{ info | json }}</pre>
+    } @else {
+      <p>Loading…</p>
+    }
+  </section>
+
+  <router-outlet />
+</main>
+

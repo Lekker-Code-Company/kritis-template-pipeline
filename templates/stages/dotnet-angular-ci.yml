@@ -1,0 +1,71 @@
+parameters:
+  backendPath: 'backend'
+  frontendPath: 'frontend'
+  enableSonar: false
+  enableTrivy: true
+  enableSbom: true
+  trivyFailOnFindings: true
+  trivySeverity: 'HIGH,CRITICAL'
+  requirementId: ''
+  helmChartPath: '' # optional
+
+stages:
+  - stage: build_test_scan
+    displayName: 'Build, test, scan, SBOM'
+    jobs:
+      - job: ci
+        displayName: 'CI'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - template: ../steps/set-traceability-vars.yml
+            parameters:
+              requirementId: ${{ parameters.requirementId }}
+
+          - ${{ if eq(parameters.enableSonar, true) }}:
+              - template: ../steps/sonar-dotnet-cli.yml
+                parameters:
+                  enabled: true
+                  projectKey: 'kritis-example-dotnet' # override in consuming pipelines
+                  projectName: 'kritis-example-dotnet'
+                  solution: '${{ parameters.backendPath }}/**/*.sln'
+
+              - template: ../steps/sonar-frontend-cli.yml
+                parameters:
+                  enabled: true
+                  workingDirectory: ${{ parameters.frontendPath }}
+
+          - ${{ if ne(parameters.enableSonar, true) }}:
+              - template: ../steps/dotnet-build-test.yml
+                parameters:
+                  path: ${{ parameters.backendPath }}
+
+              - template: ../steps/npm-build-test.yml
+                parameters:
+                  path: ${{ parameters.frontendPath }}
+
+          - ${{ if eq(parameters.enableTrivy, true) }}:
+              - template: ../steps/install-trivy.yml
+              - template: ../steps/trivy-scan-filesystem.yml
+                parameters:
+                  path: .
+                  severity: ${{ parameters.trivySeverity }}
+                  failOnFindings: ${{ parameters.trivyFailOnFindings }}
+
+          - ${{ if eq(parameters.enableSbom, true) }}:
+              - template: ../steps/install-syft.yml
+              - template: ../steps/generate-sbom.yml
+                parameters:
+                  source: .
+                  outputDir: sbom
+                  name: repo
+
+          - ${{ if ne(parameters.helmChartPath, '') }}:
+              - template: ../steps/install-helm.yml
+              - template: ../steps/helm-lint-template.yml
+                parameters:
+                  chartPath: ${{ parameters.helmChartPath }}
+

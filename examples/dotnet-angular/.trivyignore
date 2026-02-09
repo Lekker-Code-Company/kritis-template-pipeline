@@ -1,0 +1,4 @@
+# Each suppression MUST have a justification comment for auditability.
+# Example:
+# CVE-2026-12345 - not exploitable: component not shipped in runtime image; tracked in ticket REQ-1234
+

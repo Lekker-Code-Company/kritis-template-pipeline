@@ -1,0 +1,28 @@
+parameters:
+  source: '.'               # directory path OR image reference
+  outputDir: 'sbom'
+  name: 'component'         # used in filenames
+
+steps:
+  - bash: |
+      set -euo pipefail
+      mkdir -p "${{ parameters.outputDir }}"
+
+      SRC="${{ parameters.source }}"
+      NAME="${{ parameters.name }}"
+      OUT_DIR="${{ parameters.outputDir }}"
+
+      echo "Generating SBOMs for: ${SRC}"
+
+      # Syft supports multiple outputs in a single invocation.
+      syft "${SRC}" \
+        -o cyclonedx-json="${OUT_DIR}/${NAME}.cdx.json" \
+        -o spdx-json="${OUT_DIR}/${NAME}.spdx.json"
+
+      ls -la "${OUT_DIR}"
+    displayName: 'Generate SBOM (CycloneDX + SPDX)'
+
+  - publish: ${{ parameters.outputDir }}
+    artifact: sbom
+    displayName: 'Publish SBOM artifacts'
+

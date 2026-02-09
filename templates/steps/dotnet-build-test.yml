@@ -1,0 +1,18 @@
+parameters:
+  path: 'backend'
+  configuration: 'Release'
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK (global.json if present)'
+    inputs:
+      packageType: 'sdk'
+      useGlobalJson: true
+
+  - bash: |
+      set -euo pipefail
+      dotnet restore "${{ parameters.path }}"
+      dotnet build "${{ parameters.path }}" -c "${{ parameters.configuration }}" --no-restore
+      dotnet test "${{ parameters.path }}" -c "${{ parameters.configuration }}" --no-build
+    displayName: 'Build + test (.NET)'
+

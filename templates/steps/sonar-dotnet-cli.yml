@@ -1,0 +1,43 @@
+parameters:
+  enabled: false
+  projectKey: ''
+  projectName: ''
+  solution: '**/*.sln'
+  # Secrets should come from variable groups / KeyVault, not from YAML.
+  sonarHostUrlVar: 'SONAR_HOST_URL'
+  sonarTokenVar: 'SONAR_TOKEN'
+
+steps:
+  - ${{ if eq(parameters.enabled, true) }}:
+      - bash: |
+          set -euo pipefail
+          dotnet tool install --global dotnet-sonarscanner
+          echo "##vso[task.setvariable variable=PATH]$PATH:$HOME/.dotnet/tools"
+          dotnet-sonarscanner --version
+        displayName: 'Install dotnet-sonarscanner'
+
+      - bash: |
+          set -euo pipefail
+          if [ -z "${{ parameters.projectKey }}" ] || [ -z "${{ parameters.projectName }}" ]; then
+            echo "Sonar projectKey and projectName are required" >&2
+            exit 2
+          fi
+
+          HOST_URL="$(printenv ${{ parameters.sonarHostUrlVar }} || true)"
+          TOKEN="$(printenv ${{ parameters.sonarTokenVar }} || true)"
+          if [ -z "${HOST_URL}" ] || [ -z "${TOKEN}" ]; then
+            echo "Missing Sonar variables: ${{ parameters.sonarHostUrlVar }} and/or ${{ parameters.sonarTokenVar }}" >&2
+            exit 2
+          fi
+
+          dotnet-sonarscanner begin \
+            /k:"${{ parameters.projectKey }}" \
+            /n:"${{ parameters.projectName }}" \
+            /d:sonar.host.url="${HOST_URL}" \
+            /d:sonar.token="${TOKEN}"
+
+          dotnet build "${{ parameters.solution }}" -c Release
+
+          dotnet-sonarscanner end /d:sonar.token="${TOKEN}"
+        displayName: 'Sonar scan (.NET)'
+

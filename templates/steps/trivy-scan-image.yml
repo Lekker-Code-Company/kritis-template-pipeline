@@ -1,0 +1,34 @@
+parameters:
+  image: ''                 # e.g. myacr.azurecr.io/app:tag
+  severity: 'HIGH,CRITICAL'
+  failOnFindings: true
+  ignoreFile: '.trivyignore'
+  outputJson: 'trivy-image.json'
+
+steps:
+  - bash: |
+      set -euo pipefail
+      if [ -z "${{ parameters.image }}" ]; then
+        echo "image parameter is required" >&2
+        exit 2
+      fi
+
+      OUT="${{ parameters.outputJson }}"
+      EXIT_CODE=0
+      if [ "${{ parameters.failOnFindings }}" = "true" ]; then
+        EXIT_CODE=1
+      fi
+
+      trivy image "${{ parameters.image }}" \
+        --severity "${{ parameters.severity }}" \
+        --ignore-file "${{ parameters.ignoreFile }}" \
+        --format json \
+        --output "${OUT}" \
+        --exit-code "${EXIT_CODE}"
+    displayName: 'Trivy image scan'
+
+  - publish: ${{ parameters.outputJson }}
+    artifact: trivy-image
+    displayName: 'Publish Trivy image report'
+    condition: succeededOrFailed()
+

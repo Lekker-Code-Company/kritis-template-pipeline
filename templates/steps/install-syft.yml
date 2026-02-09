@@ -1,0 +1,12 @@
+parameters:
+  version: '1.10.0'
+
+steps:
+  - bash: |
+      set -euo pipefail
+      SYFT_VERSION="${{ parameters.version }}"
+      echo "Installing Syft ${SYFT_VERSION}..."
+      curl -sSfL "https://raw.githubusercontent.com/anchore/syft/main/install.sh" | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+      syft version
+    displayName: 'Install Syft'
+

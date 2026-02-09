@@ -1,0 +1,21 @@
+parameters:
+  requirementId: '' # optional, can be derived by the caller
+
+steps:
+  - bash: |
+      set -euo pipefail
+
+      echo "##vso[task.setvariable variable=GIT_SHA]$(Build.SourceVersion)"
+      echo "##vso[task.setvariable variable=BUILD_ID]$(Build.BuildId)"
+
+      if [ -n "${{ parameters.requirementId }}" ]; then
+        echo "##vso[task.setvariable variable=REQUIREMENT_ID]${{ parameters.requirementId }}"
+      else
+        echo "##vso[task.setvariable variable=REQUIREMENT_ID]"
+      fi
+
+      echo "GIT_SHA=$(Build.SourceVersion)"
+      echo "BUILD_ID=$(Build.BuildId)"
+      echo "REQUIREMENT_ID=${{ parameters.requirementId }}"
+    displayName: 'Set traceability variables'
+

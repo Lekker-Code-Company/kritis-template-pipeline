@@ -1,0 +1,63 @@
+global:
+  environment: dev
+
+# Backend deployment through mccs-dot-net
+mccs-dot-net:
+  replicaCount: 1
+  image:
+    registry: "50hzregistry.azurecr.io"
+    repository: "kritis-example-api"
+    tag: "0.0.0"
+  dotNet:
+    server:
+      port: 8080
+    healthCheck:
+      enabled: true
+      livenessProbe:
+        path: "/ops/health/live"
+      readinessProbe:
+        path: "/ops/health/ready"
+      startupProbe:
+        path: "/ops/health/ready"
+  pod:
+    injectMetaDataAsEnv: true
+  podAnnotations:
+    gitSha: "{{ .Values.global.gitSha | default \"\" }}"
+    buildId: "{{ .Values.global.buildId | default \"\" }}"
+    requirementId: "{{ .Values.global.requirementId | default \"\" }}"
+  securityContext:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+
+# Frontend deployment through mccs-frontend
+mccs-frontend:
+  replicaCount: 1
+  image:
+    registry: "50hzregistry.azurecr.io"
+    repository: "kritis-example-frontend"
+    tag: "0.0.0"
+  frontend:
+    server:
+      port: 8080
+    healthCheck:
+      enabled: true
+      livenessProbe:
+        path: "/"
+      readinessProbe:
+        path: "/"
+      startupProbe:
+        path: "/"
+  podAnnotations:
+    gitSha: "{{ .Values.global.gitSha | default \"\" }}"
+    buildId: "{{ .Values.global.buildId | default \"\" }}"
+    requirementId: "{{ .Values.global.requirementId | default \"\" }}"
+  securityContext:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+

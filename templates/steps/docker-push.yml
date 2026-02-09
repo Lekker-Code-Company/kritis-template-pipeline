@@ -1,0 +1,14 @@
+parameters:
+  image: ''          # e.g. myacr.azurecr.io/app
+  tag: ''            # e.g. $(Build.BuildId)
+
+steps:
+  - bash: |
+      set -euo pipefail
+      if [ -z "${{ parameters.image }}" ] || [ -z "${{ parameters.tag }}" ]; then
+        echo "image and tag parameters are required" >&2
+        exit 2
+      fi
+      docker push "${{ parameters.image }}:${{ parameters.tag }}"
+    displayName: 'Docker push'
+
